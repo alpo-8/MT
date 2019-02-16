@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Services
@@ -10,7 +12,7 @@ namespace MarginTrading.Backend.Core.Services
         Task UnfreezeWithdrawalMargin(string accountId, string operationId);
         Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount);
         Task UnfreezeUnconfirmedMargin(string accountId, string operationId);
-        bool IsEnoughBalance(Order order);
+        bool IsEnoughBalance(Order order, IMatchingEngineBase matchingEngine);
         void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null);
 
