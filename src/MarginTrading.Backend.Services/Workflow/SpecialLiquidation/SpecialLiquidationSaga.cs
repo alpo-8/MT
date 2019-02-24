@@ -57,12 +57,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo?.Data == null)
-            {
-                return;
-            }
-
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Initiated, 
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
                 var positionsVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
@@ -109,7 +104,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo?.Data == null)
+            if (executionInfo == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
@@ -161,7 +156,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo?.Data == null)
+            if (executionInfo == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
@@ -187,10 +182,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo?.Data == null)
+            if (executionInfo == null)
                 return;
             
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.InternalOrderExecutionStarted))
             {
                 sender.SendCommand(new ExecuteSpecialLiquidationOrdersInternalCommand
@@ -218,7 +213,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo?.Data == null)
+            if (executionInfo == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
@@ -244,10 +239,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo?.Data == null)
+            if (executionInfo == null)
                 return;
             
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrderExecutionStarted,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrdersExecuted,
                 SpecialLiquidationOperationState.Finished))
             {
                 if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
