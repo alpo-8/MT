@@ -7,6 +7,7 @@ using Lykke.Common.Log;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
 using MarginTrading.SettingsService.Contracts.AssetPair;

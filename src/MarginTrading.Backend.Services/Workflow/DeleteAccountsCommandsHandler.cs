@@ -89,6 +89,13 @@ namespace MarginTrading.Backend.Services.Workflow
                         failedAccounts.Add(accountId, exception.Message);
                         continue;
                     }
+                    
+                    var positionsCount = _orderReader.GetPositions().Count(x => x.AccountId == accountId);                    
+                    if (positionsCount != 0)
+                    {
+                        failedAccounts.Add(accountId, $"Account contain {positionsCount} open positions which must be closed before account deletion.");
+                        continue;
+                    }
 
                     var orders = _orderReader.GetPending().Where(x => x.AccountId == accountId).ToList();
                     if (orders.Any())
@@ -106,42 +113,36 @@ namespace MarginTrading.Backend.Services.Workflow
                             {
                                 failedToCloseOrderId = order.Id;
                                 failReason = exception.Message;
+                                break;
                             }
                         }
 
                         if (failedToCloseOrderId != null)
                         {
-                            failedAccounts.Add(accountId, $"Account contain some orders which failed to be closed. First one [{failedToCloseOrderId}]: {failReason}.");
+                            failedAccounts.Add(accountId, $"Failed to close order [{failedToCloseOrderId}]: {failReason}.");
                             continue;
                         }
                     }
                     
-                    var positionsCount = _orderReader.GetPositions().Count(x => x.AccountId == accountId);                    
-                    if (positionsCount != 0)
-                    {
-                        failedAccounts.Add(accountId, $"Account contain {positionsCount} open positions which must be closed before account deletion.");
-                        continue;
-                    }
-                    
                     if (account.AccountFpl.WithdrawalFrozenMarginData.Any())
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it contained some frozen withdrawal data. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(), 
+                            new Exception("While deleting an account it contained some frozen withdrawal data. Account is deleted."));
                     }
             
                     if (account.AccountFpl.UnconfirmedMarginData.Any())
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it contained some unconfirmed margin data. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(), 
+                            new Exception("While deleting an account it contained some unconfirmed margin data. Account is deleted."));
                     }
 
                     if (account.Balance != 0)
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it's balance on side of TradingCore was non zero. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler),
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(),
+                            new Exception("While deleting an account it's balance on side of TradingCore was non zero. Account is deleted."));
                     }
 
                     if (!await UpdateAccount(account, true, 
@@ -216,7 +217,8 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch (Exception exception)
             {
-                _log.Error(nameof(DeleteAccountsCommandsHandler), exception, exception.Message);
+                await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler),
+                    nameof(DeleteAccountsCommandsHandler), exception.Message, exception);
                 failHandler(exception.Message);
                 return false;
             }
