@@ -153,7 +153,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
@@ -252,7 +251,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
             
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
@@ -292,7 +290,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo != null)
+            if (executionInfo?.Data != null)
             {
                 if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested)
                 {
@@ -333,7 +331,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }
@@ -392,7 +390,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }
@@ -440,7 +438,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }
