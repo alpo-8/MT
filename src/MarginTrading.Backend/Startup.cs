@@ -24,6 +24,7 @@ using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Caches;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
@@ -106,7 +107,8 @@ namespace MarginTrading.Backend
 
             SetupLoggers(Configuration, services, mtSettings);
 
-            RunHealthChecks(mtSettings.CurrentValue.MtBackend);
+            var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
+            builder.RegisterInstance(deduplicationService).AsSelf().SingleInstance();
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -284,16 +286,17 @@ namespace MarginTrading.Backend
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
         }
 
-        private void RunHealthChecks(MarginTradingSettings marginTradingSettings)
+        private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
             //todo return DeduplicationService reference to container and register it
-            var deduplicationService =
-                new StartupDeduplicationService(new DateService(), LogLocator.CommonLog, marginTradingSettings);
+            var deduplicationService = new StartupDeduplicationService(Environment, new DateService(),
+                LogLocator.CommonLog, marginTradingSettings);
             deduplicationService.Start();
             
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
-            
+
+            return deduplicationService;
         }
     }
 }
