@@ -44,6 +44,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using StackExchange.Redis;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -104,6 +105,8 @@ namespace MarginTrading.Backend
                 });
 
             SetupLoggers(Configuration, services, mtSettings);
+
+            RunHealthChecks(mtSettings.CurrentValue.MtBackend);
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -188,6 +191,7 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
+            builder.RegisterBuildCallback(c => c.Resolve<FxRateCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
@@ -278,6 +282,18 @@ namespace MarginTrading.Backend
             JobManager.Initialize(registry);
             
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
+        }
+
+        private void RunHealthChecks(MarginTradingSettings marginTradingSettings)
+        {
+            //todo return DeduplicationService reference to container and register it
+            var deduplicationService =
+                new StartupDeduplicationService(new DateService(), LogLocator.CommonLog, marginTradingSettings);
+            deduplicationService.Start();
+            
+            new StartupQueuesCheckerService(marginTradingSettings)
+                .Check();
+            
         }
     }
 }
