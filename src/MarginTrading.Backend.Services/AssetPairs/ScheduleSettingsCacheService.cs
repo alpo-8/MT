@@ -65,8 +65,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateSettingsAsync()
         {
-            var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
-                .Where(x => x.ScheduleSettings.Any()).ToList();
+            var newScheduleContracts = new List<CompiledScheduleContract>();
+            var allIds = _assetPairsCache.GetAllIds();
+
+            newScheduleContracts = allIds.Select((s, i) => allIds.Skip(2000 * i).Take(2000))
+                .Where(a => a.Any())
+                .Aggregate(newScheduleContracts, (current, subset) => current
+                    .Concat(_scheduleSettingsApi.StateList(subset.ToArray()).Result).Where(x => x.ScheduleSettings.Any())
+                    .ToList());
             var invalidSchedules = InvalidSchedules(newScheduleContracts);
 
             _readerWriterLockSlim.EnterWriteLock();
