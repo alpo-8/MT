@@ -29,13 +29,13 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
         private readonly IOrderBookProviderApi _orderBookProviderApi;
         private readonly IDateService _dateService;
+        private readonly IConvertService _convertService;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
-        private readonly IConvertService _convertService;
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
-        private readonly IAssetPairDayOffService _assetPairDayOffService;
 
         public const string EodExternalExchange = "EOD";
         
@@ -54,24 +54,24 @@ namespace MarginTrading.Backend.Services.Stp
             IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
             IOrderBookProviderApi orderBookProviderApi,
             IDateService dateService,
+            IConvertService convertService,
+            IAssetPairDayOffService assetPairDayOffService,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
-            IConvertService convertService,
             ILog log,
-            MarginTradingSettings marginTradingSettings,
-            IAssetPairDayOffService assetPairDayOffService)
+            MarginTradingSettings marginTradingSettings)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
             _dateService = dateService;
+            _convertService = convertService;
+            _assetPairDayOffService = assetPairDayOffService;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
-            _convertService = convertService;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
-            _assetPairDayOffService = assetPairDayOffService;
         }
 
         public async Task InitializeAsync()
@@ -121,15 +121,10 @@ namespace MarginTrading.Backend.Services.Stp
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
             decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
-            {
-                if (!orderbooks.TryGetValue(externalProviderId, out var orderBook))
-                {
-                    return null;
-                }
-
-                return MatchBestPriceForPositionClose(orderBook, volume);
-            }
-
+                => !orderbooks.TryGetValue(externalProviderId, out var orderBook)
+                    ? null
+                    : MatchBestPriceForPositionClose(orderBook, volume);
+            
             return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist ? CalculatePriceForClose(orderbooks) : null);
         }
@@ -142,13 +137,13 @@ namespace MarginTrading.Backend.Services.Stp
         }
 
         private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, decimal volume,
-            bool validateOpositeDirectionVolume)
+            bool validateOppositeDirectionVolume)
         {
             var direction = volume.GetOrderDirection();
 
             var price = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
 
-            if (price != null && validateOpositeDirectionVolume)
+            if (price != null && validateOppositeDirectionVolume)
             {
                 var closePrice = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction.GetOpositeDirection());
 
@@ -167,6 +162,13 @@ namespace MarginTrading.Backend.Services.Stp
             return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 
+        public List<ExternalOrderBook> GetOrderBooks()
+        {
+            return _orderbooks
+                .Select(x => x.Value.Values.MaxBy(o => o.Timestamp))
+                .ToList();
+        }
+
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
             if (!ValidateOrderbook(orderbook) 
@@ -176,8 +178,8 @@ namespace MarginTrading.Backend.Services.Stp
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradable
-            // and process EOD orderbook only if asset is currently not tradable
+            // we should process normal orderbook only if asset is currently tradeable
+            // and process EOD orderbook only if asset is currently not tradeable
             if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
             {
                 return;
