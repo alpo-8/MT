@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.Events;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
-using MarginTrading.Common.Services;
-using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -29,11 +21,13 @@ namespace MarginTrading.Backend.Controllers
         private readonly ISnapshotService _snapshotService;
 
         public ServiceController(
+            IOvernightMarginParameterContainer overnightMarginParameterContainer,
             IIdentityGenerator identityGenerator,
-            ISnapshotService snapshotService,
-            IOvernightMarginParameterContainer overnightMarginParameterContainer)
+            ISnapshotService snapshotService)
         {
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
+            _identityGenerator = identityGenerator;
+            _snapshotService = snapshotService;
         }
 
         /// <summary>
@@ -70,7 +64,8 @@ namespace MarginTrading.Backend.Controllers
         {
             var result = _overnightMarginParameterContainer.GetOvernightMarginParameterValues()
                 .Where(x => instruments == null || !instruments.Any() || instruments.Contains(x.Key.Item2))
-                .OrderBy(x => x.Key.Item1)
+                .OrderBy(x => x.Value > 1 ? 0 : 1)
+                .ThenBy(x => x.Key.Item1)
                 .ThenBy(x => x.Key.Item2)
                 .ToDictionary(x => x.Key, x => x.Value);
             
