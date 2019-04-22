@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Controllers
             
             return await _snapshotService.MakeTradingDataSnapshot(correlationId);
         }
-
+        
         /// <summary>
         /// Get current state of overnight margin parameter.
         /// </summary>
