@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
@@ -36,14 +37,19 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <returns>Snapshot statistics.</returns>
         [HttpPost("make-trading-data-snapshot")]
-        public async Task<string> MakeTradingDataSnapshot([FromQuery] string correlationId = null)
+        public async Task<string> MakeTradingDataSnapshot([FromQuery] DateTime tradingDay, [FromQuery] string correlationId = null)
         {
+            if (tradingDay == default)
+            {
+                throw new Exception($"{nameof(tradingDay)} must be set");
+            }
+            
             if (string.IsNullOrWhiteSpace(correlationId))
             {
                 correlationId = _identityGenerator.GenerateGuid();
             }
             
-            return await _snapshotService.MakeTradingDataSnapshot(correlationId);
+            return await _snapshotService.MakeTradingDataSnapshot(tradingDay, correlationId);
         }
         
         /// <summary>
