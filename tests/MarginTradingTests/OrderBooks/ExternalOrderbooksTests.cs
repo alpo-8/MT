@@ -63,6 +63,7 @@ namespace MarginTradingTests.OrderBooks
         private Mock<IIdentityGenerator> _identityGeneratorMock;
         private Mock<ILog> _logMock;
         private Mock<IAssetPairDayOffService> _assetPairDayOffMock;
+        private Mock<IScheduleSettingsCacheService> _schedulteSettingsMock;
 
 
         #endregion
@@ -80,6 +81,7 @@ namespace MarginTradingTests.OrderBooks
             _identityGeneratorMock = new Mock<IIdentityGenerator>();
             _logMock = new Mock<ILog>();
             _assetPairDayOffMock = new Mock<IAssetPairDayOffService>();
+            _schedulteSettingsMock = new Mock<IScheduleSettingsCacheService>();
         }
         
         #endregion
@@ -91,7 +93,7 @@ namespace MarginTradingTests.OrderBooks
         {
             return new ExternalOrderbookService(_bestPricesChannelMock.Object, Mock.Of<IOrderBookProviderApi>(), 
                 _dateServiceMock.Object, new ConvertService(), _assetPairDayOffMock.Object, _assetPairsCacheMock.Object, 
-                _cqrsSenderMock.Object, _identityGeneratorMock.Object, _logMock.Object, new MarginTradingSettings());
+                _cqrsSenderMock.Object, _identityGeneratorMock.Object, _logMock.Object, new MarginTradingSettings(), _schedulteSettingsMock.Object);
         }
 
         private void AssertErrorLogged(string expectedErrorMessage)
