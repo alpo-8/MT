@@ -61,7 +61,6 @@ namespace MarginTrading.Backend.Services.Stp
             IIdentityGenerator identityGenerator,
             ILog log,
             MarginTradingSettings marginTradingSettings,
-            IAssetPairDayOffService assetPairDayOffService,
             IScheduleSettingsCacheService scheduleSettingsCache)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;

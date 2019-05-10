@@ -39,7 +39,8 @@ namespace BenchmarkScenarios
                 Mock.Of<ICqrsSender>(),
                 Mock.Of<IIdentityGenerator>(),
                 Mock.Of<ILog>(),
-                new MarginTradingSettings() {DefaultExternalExchangeId = "test"});
+                new MarginTradingSettings() {DefaultExternalExchangeId = "test"},
+                Mock.Of<IScheduleSettingsCacheService>());
             
             _lightweightService = new LightweightExternalOrderbookService(
                 Mock.Of<IEventChannel<BestPriceChangeEventArgs>>(),
