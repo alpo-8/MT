@@ -56,24 +56,24 @@ namespace MarginTrading.Backend.Services.Stp
             IDateService dateService,
             IConvertService convertService,
             IAssetPairDayOffService assetPairDayOffService,
+            IScheduleSettingsCacheService scheduleSettingsCache,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
             ILog log,
-            MarginTradingSettings marginTradingSettings,
-            IScheduleSettingsCacheService scheduleSettingsCache)
+            MarginTradingSettings marginTradingSettings)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
             _dateService = dateService;
             _convertService = convertService;
             _assetPairDayOffService = assetPairDayOffService;
+            _scheduleSettingsCache = scheduleSettingsCache;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
-            _scheduleSettingsCache = scheduleSettingsCache;
         }
 
         public async Task InitializeAsync()
